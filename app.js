@@ -5,8 +5,8 @@ const express = require("express");
 const app = express();
 const PORT = 3000;
 
-const adminRoutes = require("./routes/admin");
-const shopRoutes = require("./routes/shop");
+const adminRoutes = require("./routes/adminRoute");
+const shopRoutes = require("./routes/shopRoute");
 const errorController = require("./controllers/errorController");
 
 // Template engine config
