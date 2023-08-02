@@ -5,7 +5,7 @@ const router = express.Router();
 const adminController = require("../controllers/adminController");
 
 // /admin/add-product => GET
-router.get("/add-product", adminController.getAddProucts);
+router.get("/add-product", adminController.getAddProduct);
 
 // /admin/products => GET
 router.get("/products", adminController.getProducts);

@@ -20,6 +20,25 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use("/admin", adminRoutes);
 app.use(shopRoutes);
 
+const pool = require("./util/DBConnect");
+
+async function fetchData() {
+  try {
+    const client = await pool.connect();
+    console.log("postgres DB Connected");
+    const result = await client.query("SELECT * FROM products");
+    client.release(); // Release the client back to the pool
+    return result.rows;
+  } catch (error) {
+    console.error("Error executing query:", error);
+    throw error;
+  }
+}
+
+fetchData()
+  .then((data) => console.log(data))
+  .catch((err) => console.error("Error:", err.message));
+
 app.use(errorController.get404);
 
 app.listen(PORT, () => console.log(`Server listening on port ${PORT}`));
