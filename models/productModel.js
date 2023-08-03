@@ -1,22 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 const products = [];
-
-const p = path.join(
-  path.dirname(require.main.filename),
-  "data",
-  "products.json"
-);
-
-const getProductsFromFile = (cb) => {
-  fs.readFile(p, (err, fileContent) => {
-    if (err) {
-      cb([]);
-    } else {
-      cb(JSON.parse(fileContent));
-    }
-  });
-};
+const db = require("../util/DBConn");
 
 module.exports = class Product {
   constructor(title, imageUrl, description, price) {
@@ -26,24 +11,21 @@ module.exports = class Product {
     this.price = price;
   }
 
-  save() {
-    this.id = Math.random().toString();
-    getProductsFromFile((products) => {
-      products.push(this);
-      fs.writeFile(p, JSON.stringify(products), (err) => {
-        err ? console.log(err) : null;
-      });
-    });
+  save() {}
+
+  static deleteById(id) {}
+
+  static async fetchAll() {
+    try {
+      const client = await db.connect();
+      const result = await client.query("SELECT * FROM products");
+      // client.release(); // Release the client back to the pool
+      return result.rows;
+    } catch (error) {
+      console.error("Error executing query:", error);
+      throw error;
+    }
   }
 
-  static fetchAll(cb) {
-    getProductsFromFile(cb);
-  }
-
-  static findById(id, cb) {
-    getProductsFromFile((products) => {
-      const product = products.find((p) => p.id === id);
-      cb(product);
-    });
-  }
+  static findById(id) {}
 };

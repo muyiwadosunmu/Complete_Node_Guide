@@ -20,7 +20,7 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use("/admin", adminRoutes);
 app.use(shopRoutes);
 
-const pool = require("./util/DBConnect");
+const pool = require("./util/DBConn");
 
 async function fetchData() {
   try {
@@ -35,9 +35,9 @@ async function fetchData() {
   }
 }
 
-fetchData()
-  .then((data) => console.log(data))
-  .catch((err) => console.error("Error:", err.message));
+// fetchData()
+//   .then((data) => console.log(data))
+//   .catch((err) => console.error("Error:", err.message));
 
 app.use(errorController.get404);
 

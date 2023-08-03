@@ -22,10 +22,11 @@ exports.getProduct = (req, res, next) => {
   });
 };
 
-exports.getIndex = (req, res, next) => {
-  Product.fetchAll((products) => {
+exports.getIndex = async (req, res, next) => {
+  await Product.fetchAll().then((rows) => {
+    console.log(rows);
     res.render("shop/index", {
-      prods: products,
+      prods: rows,
       pageTitle: "Shop",
       path: "/",
     });
