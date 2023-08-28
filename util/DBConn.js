@@ -1,11 +1,23 @@
-const Pool = require("pg-pool");
+const Sequelize = require("sequelize");
 
-const pool = new Pool({
-  database: "node-complete-guide",
-  user: "postgres",
-  password: "postgres",
-  port: 5432,
-  max: 10,
+const sequelize = new Sequelize('TutDB', 'postgres', 'postgres', {
+  host: 'localhost', // Replace with your PostgreSQL server's host
+  port: 5432,        // Replace with the port number PostgreSQL is running on
+  dialect: 'postgres',
+  logging: false,    // Set to true to see SQL queries in the console
 });
 
-module.exports = pool;
+// Test the connection
+(async () => {
+  try {
+    await sequelize.authenticate();
+    console.log('Connection has been established successfully.');
+  } catch (error) {
+    console.error('Unable to connect to the database:', error);
+  }
+})();
+
+module.exports = sequelize;
+
+
+
