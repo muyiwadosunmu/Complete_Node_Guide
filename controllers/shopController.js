@@ -1,96 +1,126 @@
-const Product = require("../models/productModel");
-const Cart = require("../models/cartModel");
+const Product = require('../models/productModel');
+const Order = require('../models/orderModel');
+const User = require('../models/userModel'); // Assuming you have a User model defined
 
-exports.getProducts = async (req, res, next) => {
-  try {
-    const products = await Product.findAll();
-    res.render("shop/product-list", {
-      prods: products,
-      pageTitle: "All Products",
-      path: "/products",
+exports.getProducts = (req, res, next) => {
+  Product.find()
+    .then(products => {
+      console.log(products);
+      res.render('shop/product-list', {
+        prods: products,
+        pageTitle: 'All Products',
+        path: '/products'
+      });
+    })
+    .catch(err => {
+      console.log(err);
     });
-  } catch (error) {
-    console.log(error);
-  }
 };
 
 exports.getProduct = (req, res, next) => {
-  try {
-    const prodID = req.params.productId;
-    const product = Product.findOne({ where: { id: prodID } });
-    res.render("shop/product-detail", {
-      product: product,
-      pageTitle: product.title,
-      path: "/products",
-    });
-  } catch (error) {}
+  const prodId = req.params.productId;
+  Product.findById(prodId)
+    .then(product => {
+      res.render('shop/product-detail', {
+        product: product,
+        pageTitle: product.title,
+        path: '/products'
+      });
+    })
+    .catch(err => console.log(err));
 };
 
-exports.getIndex = async (req, res, next) => {
+exports.getIndex = (req, res, next) => {
+  Product.find()
+    .then(products => {
+      res.render('shop/index', {
+        prods: products,
+        pageTitle: 'Shop',
+        path: '/'
+      });
+    })
+    .catch(err => {
+      console.log(err);
+    });
+};
+
+
+exports.getCart = async (req, res, next) => {
   try {
-    const products = await Product.findAll();
-    res.render("shop/index", {
-      prods: products,
-      pageTitle: "Shop",
-      path: "/",
+    const user = await User.findById(req.user._id).populate('cart.items.productId');
+    const products = user.cart.items;
+    
+    res.render('shop/cart', {
+      path: '/cart',
+      pageTitle: 'Your Cart',
+      products: products
     });
   } catch (error) {
-    console.log(error);
+    console.error(error);
+    next(error); // Pass the error to the error-handling middleware
   }
 };
 
-exports.getCart = (req, res, next) => {
-  req.user.getCart().then((cart) => {
-    console.log(cart)
-  }).catch((err) => {
-    console.log(err)
-  });
-  Cart.getCart((cart) => {
-    Product.fetchAll((products) => {
-      const cartProducts = [];
-      for (product of products) {
-        const cartProductData = cart.products.find(
-          (prod) => prod.id === product.id
-        );
-        if (cartProductData) {
-          cartProducts.push({ productData: product, qty: cartProductData.qty });
-        }
-      }
-      res.render("shop/cart", {
-        path: "/cart",
-        pageTitle: "Your Cart",
-        products: cartProducts,
-      });
-    });
-  });
-};
+
 
 exports.postCart = (req, res, next) => {
   const prodId = req.body.productId;
-  Product.findById(prodId, (product) => {
-    Cart.addProduct(prodId, product.price);
-  });
-  res.redirect("/cart");
+  Product.findById(prodId)
+    .then(product => {
+      return req.user.addToCart(product);
+    })
+    .then(result => {
+      console.log(result);
+      res.redirect('/cart');
+    });
 };
 
 exports.postCartDeleteProduct = (req, res, next) => {
   const prodId = req.body.productId;
-  Product.findById(prodId, (product) => {
-    Cart.deleteProduct(prodId, product.price);
-    res.redirect("/cart");
-  });
+  req.user
+    .removeFromCart(prodId)
+    .then(result => {
+      res.redirect('/cart');
+    })
+    .catch(err => console.log(err));
 };
+
+
+exports.postOrder = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user._id).populate('cart.items.productId');
+
+    const products = user.cart.items.map(i => {
+      return { quantity: i.quantity, product: { ...i.productId._doc } };
+    });
+
+    const order = new Order({
+      user: {
+        name: req.user.name,
+        userId: req.user._id
+      },
+      products: products
+    });
+
+    await order.save();
+    await req.user.clearCart();
+
+    res.redirect('/orders');
+  } catch (error) {
+    console.error(error);
+    next(error); // Pass the error to the error-handling middleware
+  }
+};
+
 
 exports.getOrders = (req, res, next) => {
-  res.render("shop/orders", {
-    path: "/orders",
-    pageTitle: "Your Orders",
-  });
-};
-
-exports.getCheckout = (req, res, next) => {
-  res.render("shop/checkout", {
-    path: "/checkout",
-    pageTitle: "Checkout",
-  });
+  Order.find({ 'user.userId': req.user._id })
+    .then(orders => {
+      res.render('shop/orders', {
+        path: '/orders',
+        pageTitle: 'Your Orders',
+        orders: orders
+      });
+    })
+    .catch(err => console.log(err));
 };

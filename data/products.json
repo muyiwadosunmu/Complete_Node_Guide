@@ -1,16 +1,1 @@
-[
-  {
-    "id": "345677",
-    "title": "A Book",
-    "imageUrl": "https://www.publicdomainpictures.net/pictures/230000/t2/zebra-pair.jpg",
-    "description": "This book is nice",
-    "price": "30"
-  },
-  {
-    "id": "3454566",
-    "title": "Gavel",
-    "imageUrl": "https://www.publicdomainpictures.net/pictures/170000/t2/judge-gavel-1461287201YS0.jpg",
-    "description": "A brown gavel",
-    "price": "15.88"
-  }
-]
+[{"id":"123245","title":"A Book","imageUrl":"https://www.publicdomainpictures.net/pictures/10000/velka/1-1210009435EGmE.jpg","description":"This is an awesome book!","price":"19"},{"id":"0.41607315815753076","title":"fasfd","imageUrl":"fdasfs","description":"fadsfads","price":"12"}]
