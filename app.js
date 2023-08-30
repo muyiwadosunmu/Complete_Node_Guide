@@ -14,7 +14,7 @@ const MONGODB_URI = 'mongodb+srv://oluwamuyiwadosunmu:TKf5iCgZYN7n5i4K@cluster0.
 const app = express();
 
 const store = new MongoDBStore({
-  uri: MONGODB_URI,
+  uri: MONGODB_URI, // We could use diff implementations like Redis
   collection: 'sessions'
 });
 
@@ -32,13 +32,16 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use(session({
   secret:',my-secret-key',
-  resave:false,
-  saveUninitialized:false,
+  resave:false, // improves performance
+  saveUninitialized:false, // makes sure unnecessary are saved
   store:store
 }))
 
 app.use((req, res, next) => {
-  User.findById('64edcb784f98e4f7693db2a3')
+  if(!req.session.user) {
+    return next()
+  }
+  User.findById(req.session.user._id) //We call a method to find user by the session
     .then(user => {
       req.user = user;
       next();

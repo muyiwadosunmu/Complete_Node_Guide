@@ -19,11 +19,10 @@ exports.getSignup = (req, res, next) => {
 exports.postLogin = (req, res, next) => {
   User.findById('64edcb784f98e4f7693db2a3')
     .then(user => {
+      // N.B -> req.session object is added for us by the session middleware
       req.session.isLoggedIn = true;
       req.session.user = user;
       req.session.save(err => {
-        // console.log(err);
-        res.setHeader('Set-Cookie', "loggedIn=true");
         res.redirect('/');
       });
     })
@@ -33,8 +32,8 @@ exports.postLogin = (req, res, next) => {
 exports.postSignup = (req, res, next) => {};
 
 exports.postLogout = (req, res, next) => {
-  req.session.destroy(err => {
-    console.log(err);
+  req.session.destroy(err => { //destroy is a method provided by the express-session package we're using
+    // console.log(err);
     res.redirect('/');
   });
 };
