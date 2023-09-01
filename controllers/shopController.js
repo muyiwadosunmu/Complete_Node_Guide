@@ -3,7 +3,9 @@ const Order = require("../models/orderModel");
 const User = require("../models/userModel"); // Assuming you have a User model defined
 
 exports.getProducts = (req, res, next) => {
-  Product.find()
+  Product.find({
+    userId: req.user._id,
+  })
     .then((products) => {
       console.log(products);
       res.render("shop/product-list", {

@@ -1,4 +1,5 @@
 const crypto = require("node:crypto");
+const mongoose = require("mongoose");
 const sendEmail = require("../util/email");
 const bcrypt = require("bcryptjs");
 const User = require("../models/userModel");
@@ -146,26 +147,75 @@ exports.postReset = async (req, res, next) => {
     foundUser.resetTokenExpiration = Date.now() + 3600000; // 1hr
     await foundUser.save();
 
-    const resetURL = `${req.protocol}://${req.get(
-      "host"
-    )}/api/v1/users/resetPassword/${resetToken}`;
-    const message = `Forgot your password? Submit a request with your new password and password Confirm to : ${resetURL}.\nIf you didn't forget your password, please ignore this email`;
+    const resetURL = `${req.protocol}://${req.get("host")}/reset/${token}`;
+    const message = `Forgot your password?\n Click this link to set a new password : ${resetURL}.\nIf you didn't forget your password, please ignore this email`;
 
+    res.redirect("/");
     await sendEmail({
       email: foundUser.email, //Or req.body.email
-      subject: `Your password reset token - Valid for 10mins`,
+      subject: `Your password reset token - Valid for 60mins`,
       message,
-    });
-
-    //Email implementation here
-
-    res.render("auth/reset", {
-      path: "/reset",
-      pageTitle: "Reset Password",
-      errorMessage: message,
     });
   } catch (err) {
     console.log(err);
     res.redirect("/reset");
+  }
+};
+
+exports.getNewPassword = async (req, res, next) => {
+  const { token } = req.params;
+
+  const foundUser = await User.findOne({
+    resetToken: token,
+    resetTokenExpiration: {
+      $gt: Date.now(),
+    },
+  });
+
+  if (foundUser) {
+    let message = req.flash("error");
+    if (message.length > 0) {
+      message = message[0];
+    } else {
+      message = null;
+    }
+    res.render("auth/new-password", {
+      path: "/new-password",
+      pageTitle: "New Password",
+      errorMessage: message,
+      passwordToken: token,
+      userId: foundUser._id.toString(), //we had to duplicate our hidden field in new-password.ejs
+    });
+    console.log(foundUser._id);
+  }
+};
+
+exports.postNewPassword = async (req, res, next) => {
+  const newPassword = req.body.password;
+  const userId = req.body.userId;
+  const passwordToken = req.body.passwordToken;
+
+  try {
+    const resetUser = await User.findOne({
+      resetToken: passwordToken,
+      resetTokenExpiration: { $gt: Date.now() },
+      _id: userId,
+    });
+
+    if (!resetUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 12);
+
+    resetUser.password = hashedPassword;
+    resetUser.resetToken = undefined;
+    resetUser.resetTokenExpiration = undefined;
+
+    await resetUser.save();
+    res.redirect("/login");
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Internal server error" });
   }
 };
