@@ -1,10 +1,12 @@
 const path = require("path");
+require("dotenv").config();
+console.log(process.env);
 
 const express = require("express");
 const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
 const session = require("express-session");
-const { csrfSync } = require("csrf-sync");
+const csrfSync = require("csrf-sync");
 const flash = require("connect-flash");
 const MongoDBStore = require("connect-mongodb-session")(session);
 
@@ -19,7 +21,7 @@ const authRoutes = require("./routes/auth");
 
 const app = express();
 
-const { csrfSyncProtection } = csrfSync();
+const csrfSecret = "your-secret-key"; // Use a strong secret key for production
 
 const store = new MongoDBStore({
   uri: MONGODB_URI, // We could use diff implementations like Redis
