@@ -13,8 +13,8 @@ const MongoDBStore = require("connect-mongodb-session")(session);
 const PORT = 3000 || process.env.PORT;
 const errorController = require("./controllers/errorController");
 const User = require("./models/userModel");
-const MONGODB_URI =
-  "mongodb+srv://oluwamuyiwadosunmu:TKf5iCgZYN7n5i4K@cluster0.q6tfwsl.mongodb.net/shop";
+const MONGODB_URI = process.env.MONGODB_URI;
+
 const adminRoutes = require("./routes/admin");
 const shopRoutes = require("./routes/shop");
 const authRoutes = require("./routes/auth");
@@ -48,11 +48,11 @@ app.use(
 /**flash middleware */
 app.use(flash());
 
-app.use((req, res, next) => {
+app.use(async (req, res, next) => {
   if (!req.session.user) {
     return next();
   }
-  User.findById(req.session.user._id) //We call a method to find user by the session
+  await User.findById(req.session.user._id) //We call a method to find user by the session
     .then((user) => {
       req.user = user;
       next();

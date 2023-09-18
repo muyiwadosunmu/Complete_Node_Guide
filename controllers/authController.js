@@ -1,7 +1,8 @@
 const crypto = require("node:crypto");
 const mongoose = require("mongoose");
-const sendEmail = require("../util/email");
 const bcrypt = require("bcryptjs");
+const { validationResult } = require("express-validator");
+const sendEmail = require("../util/email");
 const User = require("../models/userModel");
 const { getTokenFromRequest } = require("csrf-sync");
 
@@ -22,6 +23,11 @@ exports.getLogin = (req, res, next) => {
     path: "/login",
     pageTitle: "Login",
     errorMessage: message,
+    oldInput: {
+      email: "",
+      password: "",
+    },
+    validationErrors: [],
     // isAuthenticated: false,
     // csrfToken: req.csrfToken(false),
   });
@@ -38,23 +44,62 @@ exports.getSignup = (req, res, next) => {
     path: "/signup",
     pageTitle: "Signup",
     errorMessage: message,
+    oldInput: { email: "", password: "", confirmPassword: "" },
+    validationErrors: [],
     // isAuthenticated: false,
     // csrfToken: req.csrfToken(false),
   });
 };
 
 exports.postLogin = async (req, res, next) => {
-  const { email, password } = req.body;
+  const { email, password, confirmPassword } = req.body;
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    // console.log(errors.array());
+    return res.status(422).render("auth/login", {
+      path: "/signup",
+      pageTitle: "Signup",
+      errorMessage: errors.array()[0].msg,
+      oldInput: {
+        email: email,
+        password: password,
+      },
+      validationErrors: errors.array(),
+      // isAuthenticated: false,
+      // csrfToken: req.csrfToken(false),
+    });
+  }
 
   try {
     const foundUser = await User.findOne({ email: email });
     if (!foundUser) {
       req.flash("error", "Invalid Email or Password");
-      return res.redirect("/login");
+      return res.status(422).render("auth/login", {
+        path: "/login",
+        pageTitle: "Login",
+        errorMessage: "Invalid Email or Password",
+        oldInput: {
+          email: email,
+          password: password,
+        },
+        validationErrors: [],
+        // validationErrors: [{param:'email', param:}]
+        // isAuthenticated: false,
+        // csrfToken: req.csrfToken(false),
+      });
     }
     const isPasswordValid = await bcrypt.compare(password, foundUser.password);
     if (!isPasswordValid) {
-      return res.redirect("/login");
+      return res.status(422).render("auth/login", {
+        path: "/login",
+        pageTitle: "Login",
+        errorMessage: "Invalid Email or Password",
+        oldInput: {
+          email: email,
+          password: password,
+        },
+        validationErrors: [],
+      });
     }
 
     // Set session properties
@@ -72,6 +117,23 @@ exports.postLogin = async (req, res, next) => {
 
 exports.postSignup = async (req, res, next) => {
   const { email, password, confirmPassword } = req.body;
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    // console.log(errors.array());
+    return res.status(422).render("auth/signup", {
+      path: "/signup",
+      pageTitle: "Signup",
+      errorMessage: errors.array()[0].msg,
+      oldInput: {
+        email: email,
+        password: password,
+        confirmPassword: confirmPassword,
+      },
+      validationErrors: errors.array(),
+      // isAuthenticated: false,
+      // csrfToken: req.csrfToken(false),
+    });
+  }
   try {
     const userDoc = await User.findOne({ email: email });
 
