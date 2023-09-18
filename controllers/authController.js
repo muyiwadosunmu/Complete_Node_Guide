@@ -159,7 +159,9 @@ exports.postSignup = async (req, res, next) => {
 
     res.redirect("/login");
   } catch (err) {
-    console.log(err);
+    const error = new Error(err);
+    error.httpStatusCode = 500;
+    return next(error);
   }
 };
 
@@ -277,7 +279,8 @@ exports.postNewPassword = async (req, res, next) => {
     await resetUser.save();
     res.redirect("/login");
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Internal server error" });
+    const error = new Error(err);
+    error.httpStatusCode = 500;
+    return next(error);
   }
 };
