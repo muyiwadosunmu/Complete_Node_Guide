@@ -49,6 +49,7 @@ app.use(
 app.use(flash());
 
 app.use(async (req, res, next) => {
+  // throw new Error('Sync Dummy');    this works like this in a synchronous code
   if (!req.session.user) {
     return next();
   }
@@ -61,7 +62,8 @@ app.use(async (req, res, next) => {
       next();
     })
     .catch((err) => {
-      throw new Error(err);
+      next(new Error(err)) 
+      //This is how you throw an error in asynchronous code in Express
     });
 });
 
