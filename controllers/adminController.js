@@ -1,10 +1,7 @@
-const Product = require("../models/productModel");
 const { validationResult } = require("express-validator");
+const Product = require("../models/productModel");
 
 exports.getAddProduct = (req, res, next) => {
-  if (!req.session.isLoggedIn) {
-    return res.redirect("/login");
-  }
   res.render("admin/edit-product", {
     pageTitle: "Add Product",
     path: "/admin/add-product",
@@ -17,9 +14,10 @@ exports.getAddProduct = (req, res, next) => {
 
 exports.postAddProduct = (req, res, next) => {
   const title = req.body.title;
-  const imageUrl = req.body.imageUrl;
+  const imageUrl = req.file;
   const price = req.body.price;
   const description = req.body.description;
+  console.log(imageUrl);
   const errors = validationResult(req);
 
   if (!errors.isEmpty()) {
@@ -90,8 +88,6 @@ exports.getEditProduct = (req, res, next) => {
         hasError: false,
         errorMessage: null,
         validationErrors: [],
-
-        // isAuthenticated: req.session.isLoggedIn,
       });
     })
     .catch((err) => {

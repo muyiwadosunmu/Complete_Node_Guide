@@ -28,6 +28,7 @@
     "express-validator": "^7.0.1",
     "html-to-text": "^9.0.5",
     "mongoose": "^7.4.5",
+    "multer": "1.4.5-lts.1",
     "nodemailer": "^6.9.4",
     "pg": "^8.11.2",
     "pg-hstore": "^2.3.4",

@@ -3,9 +3,7 @@ const Order = require("../models/orderModel");
 const User = require("../models/userModel"); // Assuming you have a User model defined
 
 exports.getProducts = (req, res, next) => {
-  Product.find({
-    userId: req.user._id,
-  })
+  Product.find()
     .then((products) => {
       console.log(products);
       res.render("shop/product-list", {
@@ -67,9 +65,10 @@ exports.getCart = async (req, res, next) => {
       pageTitle: "Your Cart",
       products: products,
     });
-  } catch (error) {
-    console.error(error);
-    next(error); // Pass the error to the error-handling middleware
+  } catch (err) {
+    const error = new Error(err);
+    error.httpStatusCode = 500;
+    return next(error); // Pass the error to the error-handling middleware
   }
 };
 
@@ -82,6 +81,11 @@ exports.postCart = (req, res, next) => {
     .then((result) => {
       console.log(result);
       res.redirect("/cart");
+    })
+    .catch((err) => {
+      const error = new Error(err);
+      error.httpStatusCode = 500;
+      return next(error);
     });
 };
 
@@ -121,9 +125,10 @@ exports.postOrder = async (req, res, next) => {
     await req.user.clearCart();
 
     res.redirect("/orders");
-  } catch (error) {
-    console.error(error);
-    next(error); // Pass the error to the error-handling middleware
+  } catch (err) {
+    const error = new Error(err);
+    error.httpStatusCode = 500;
+    return next(error); // Pass the error to the error-handling middleware
   }
 };
 

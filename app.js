@@ -9,6 +9,7 @@ const session = require("express-session");
 const csrfSync = require("csrf-sync");
 const flash = require("connect-flash");
 const MongoDBStore = require("connect-mongodb-session")(session);
+const multer = require("multer");
 
 const PORT = 3000 || process.env.PORT;
 const errorController = require("./controllers/errorController");
@@ -22,6 +23,26 @@ const authRoutes = require("./routes/auth");
 const app = express();
 
 const csrfSecret = "your-secret-key"; // Use a strong secret key for production
+const fileStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "images");
+  },
+  filename: (req, file, cb) => {
+    cb(null, new Date().toISOString() + "-" + file.originalname);
+  },
+});
+
+const fileFilter = (req, file, cb) => {
+  if (
+    file.mimetype === "image/png" ||
+    file.mimetype === "image/jpg" ||
+    file.mimetype === "image/jpeg"
+  ) {
+    cb(null, true);
+  } else {
+    cb(null, true); //Determine to store file
+  }
+};
 
 const store = new MongoDBStore({
   uri: MONGODB_URI, // We could use diff implementations like Redis
@@ -32,6 +53,9 @@ app.set("view engine", "ejs");
 app.set("views", "views");
 
 app.use(express.urlencoded({ extended: false }));
+app.use(
+  multer({ storage: fileStorage, fileFilter: fileFilter }).single("image")
+);
 app.use(express.static(path.join(__dirname, "public")));
 
 app.use(
@@ -62,7 +86,7 @@ app.use(async (req, res, next) => {
       next();
     })
     .catch((err) => {
-      next(new Error(err)) 
+      next(new Error(err));
       //This is how you throw an error in asynchronous code in Express
     });
 });
@@ -80,12 +104,16 @@ app.use(shopRoutes);
 app.use(authRoutes);
 
 app.get("/500", errorController.get500);
-
 app.use(errorController.get404);
 
-app.use((err, req, res, next) => {
-  // res.status(error.httpStatusCode).render(....) // We could do something like this as well
-  res.redirect("/500");
+app.use((error, req, res, next) => {
+  // res.status(error.httpStatusCode).render(...);
+  // res.redirect('/500');
+  res.status(500).render("500", {
+    pageTitle: "Error!",
+    path: "/500",
+    isAuthenticated: req.session.isLoggedIn,
+  });
 });
 
 mongoose
